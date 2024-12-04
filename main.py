@@ -3,7 +3,9 @@ import pandas as pd
 from scipy import stats
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.decomposition import PCA
 
+# Load the dataset
 data = pd.read_excel('TrainDataset2024.xls')
 
 # Show the first few rows to inspect the data
@@ -15,67 +17,58 @@ X = data.drop(columns=['pCR (outcome)', 'RelapseFreeSurvival (outcome)', 'ID']) 
 y_pcr = data['pCR (outcome)']  # Target for classification
 y_rfs = data['RelapseFreeSurvival (outcome)']  # Target for regression
 
-# Check for categorical columns (object data types)
+# Handle missing data
+# Impute categorical columns with the most frequent value
 categorical_columns = X.select_dtypes(include=['object']).columns
-print(f"Categorical columns: {categorical_columns}")
-
-# Check if categorical columns exist
 if len(categorical_columns) > 0:
-    # Impute missing data for categorical columns with mode
     imputer_cat = SimpleImputer(strategy='most_frequent')
     X[categorical_columns] = imputer_cat.fit_transform(X[categorical_columns])
-else:
-    print("No categorical columns found for imputation.")
 
-# Check for numerical columns (float or int types)
+# Impute numerical columns with the mean
 numerical_columns = X.select_dtypes(include=[np.number]).columns
-print(f"Numerical columns: {numerical_columns}")
-
-# Impute missing data for numerical columns with mean
 if len(numerical_columns) > 0:
     imputer_num = SimpleImputer(strategy='mean')
     X[numerical_columns] = imputer_num.fit_transform(X[numerical_columns])
-else:
-    print("No numerical columns found for imputation.")
 
 # Check for missing values after imputation
-print("Check for missing values after imputation:")
+print("Missing values after imputation:")
 print(X.isnull().sum())
 
-# Outlier Detection - Using Z-score method
+# Remove outliers using the Z-score method
 z_scores = np.abs(stats.zscore(X.select_dtypes(include=[np.number])))
-outliers = (z_scores > 3).all(axis=1)
-
-# Remove rows with outliers
+outliers = (z_scores > 3).all(axis=1)  # Marks rows where all columns exceed Z-score threshold
 X_clean = X[~outliers]
 y_pcr_clean = y_pcr[~outliers]
 y_rfs_clean = y_rfs[~outliers]
 
-# Verify the shape of the cleaned dataset
-print(f"Shape of the cleaned dataset (without outliers): {X_clean.shape}")
+print(f"Shape of the cleaned dataset (no outliers): {X_clean.shape}")
 
-# Normalizing the numerical features
+# Normalize numerical features
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X_clean)
+X_scaled = scaler.fit_transform(X_clean.select_dtypes(include=[np.number]))
 
-# Convert categorical columns to numerical using Label Encoding
-# The features ER, HER2, and Gene are mandatory, so they are encoded but kept for later use
-encoder = LabelEncoder()
+# Perform PCA and retain the first 3 components
+pca = PCA(n_components=3)
+X_pca = pca.fit_transform(X_scaled)
 
-# Columns that need to be label encoded
+# Encode categorical features using LabelEncoder
 label_encoded_columns = ['ER', 'HER2', 'Gene']
 for col in label_encoded_columns:
     if col in X_clean.columns:
+        encoder = LabelEncoder()
         X_clean[col] = encoder.fit_transform(X_clean[col])
     else:
         print(f"Warning: Column '{col}' not found for Label Encoding.")
 
-# Saving the preprocessed data
-preprocessed_data = pd.DataFrame(X_scaled, columns=X_clean.columns)
-preprocessed_data['pCR'] = y_pcr_clean  # Use this for PCR
-preprocessed_data['RelapseFreeSurvival'] = y_rfs_clean  # Use this for RFS
+# Combine PCA-transformed data and encoded categorical columns
+X_pca_df = pd.DataFrame(X_pca, columns=['PC1', 'PC2', 'PC3'])
+X_encoded = pd.concat([X_pca_df, X_clean[categorical_columns]], axis=1)
 
-# Show first few rows of the preprocessing
+# Final dataset for further processing
+X_final = pd.concat([X_encoded, X_clean[label_encoded_columns]], axis=1)
+X_final['pCR'] = y_pcr_clean
+X_final['RelapseFreeSurvival'] = y_rfs_clean
+
+# Show first few rows of the final preprocessed data
 print("First few rows of the preprocessed data:")
-print(preprocessed_data.head())
-
+print(X_final.head())
