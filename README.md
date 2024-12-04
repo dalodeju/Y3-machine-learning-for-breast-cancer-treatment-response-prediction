@@ -14,34 +14,53 @@ pip install scikit-learn numpy pandas scipy xlrd
 
 ### 1. **Loading the Dataset**
 
-The dataset is loaded using `pandas.read_excel()` from an Excel file (`TrainDataset2024.xls`). The dataset contains both features and target columns. The target columns include the outcomes for classification (`pCR`) and regression (`RelapseFreeSurvival`), while the features are used for training the models.
+The dataset is loaded using `pandas.read_excel()` from an Excel file (`TrainDataset2024.xls`). The dataset contains both features and target columns:
+- **Target Columns**:
+  - `pCR (outcome)`: Used for classification tasks.
+  - `RelapseFreeSurvival (outcome)`: Used for regression tasks.
+- **Features**: All other columns except the target columns and `ID` are used as input features for model training.
 
 ### 2. **Handling Missing Data**
 
-- **Categorical Columns**: Missing values in categorical columns (e.g., strings or labels) are imputed using the **mode** (most frequent value) with `SimpleImputer(strategy='most_frequent')`.
-- **Numerical Columns**: Missing values in numerical columns (e.g., integers or floats) are imputed using the **mean** with `SimpleImputer(strategy='mean')`.
+#### Categorical Columns:
+Missing values in categorical columns (e.g., strings or labels) are filled using the **most frequent value** (mode). This is done using the `SimpleImputer` from `scikit-learn` with the strategy `most_frequent`.
+
+#### Numerical Columns:
+Missing values in numerical columns (e.g., integers or floats) are filled using the **mean**. This is done using the `SimpleImputer` with the strategy `mean`.
 
 ### 3. **Outlier Detection and Removal**
 
-Outliers in numerical columns are detected using the **Z-score** method. A Z-score greater than 3 (in absolute value) indicates an outlier. These rows are removed from the dataset to ensure that the model is not biased by extreme values.
+Outliers in numerical columns are detected using the **Z-score** method. A Z-score indicates how far a value is from the mean in terms of standard deviations. Rows where all numerical features have a Z-score greater than 3 (in absolute value) are considered outliers and are removed from the dataset. This step helps ensure that extreme values do not negatively affect the model.
 
 ### 4. **Feature Scaling**
 
-Feature scaling is an essential step in preprocessing, especially when the dataset contains numerical features with varying scales. Standardizing the features ensures that all numerical features have a mean of 0 and a standard deviation of 1. This can improve the performance and convergence speed of many machine learning algorithms.
+Numerical features often have varying scales, which can lead to poor model performance. Scaling ensures that all numerical features have a mean of 0 and a standard deviation of 1.
 
-**StandardScaler** is used from `scikit-learn` to scale the numerical features. The `fit_transform()` method is used to scale the cleaned data (`X_clean`).
+- The `StandardScaler` from `scikit-learn` is used for this purpose.
+- The `fit_transform()` method is applied to scale only the numerical features of the cleaned data (`X_clean`).
 
-### 5. **Label Encoding**
+### 5. **Principal Component Analysis (PCA)**
 
-Label encoding is used to convert categorical variables into numerical format. Many machine learning algorithms expect input features to be numeric, and label encoding helps by assigning a unique integer to each category in a categorical feature.
+To reduce dimensionality and capture the most important features:
+- **PCA (Principal Component Analysis)** is applied using `PCA(n_components=3)` from `scikit-learn`.
+- The first three principal components (`PC1`, `PC2`, `PC3`) are retained for further use.
 
-**LabelEncoder** is used from `scikit-learn` to encode categorical features such as **ER**, **HER2**, and **Gene**. Label encoding works by assigning each unique category in the column an integer value.
+### 6. **Label Encoding**
 
-### 6. **Saving the Preprocessed Data**
+Categorical variables are converted into numerical format using label encoding:
+- `LabelEncoder` from `scikit-learn` is used to assign a unique integer to each category in the columns `ER`, `HER2`, and `Gene`.
+- The original categorical columns are replaced with their numeric representations.
 
-Once all preprocessing steps are completed, it's essential to save the processed data for future use in model training. The data will be stored in a **DataFrame** format, where:
-- The features are scaled and encoded as required.
-- The target variables (**pCR** and **RelapseFreeSurvival**) are also included in the final dataset.
+### 7. **Combining Features and Targets**
+
+The final dataset includes:
+- The scaled PCA-transformed numerical features (`PC1`, `PC2`, `PC3`).
+- Encoded categorical features such as `ER`, `HER2`, and `Gene`.
+- The target variables:
+  - `pCR` for classification.
+  - `RelapseFreeSurvival` for regression.
+
+The processed data is saved in a DataFrame for use in model training.
 
 ## **Feature Selection**
 In this section, we will explore techniques to identify and select the most important features that contribute to the prediction of the target variables (**pCR** and **RelapseFreeSurvival**). Feature selection helps improve the efficiency and accuracy of the model by removing irrelevant or redundant features.
