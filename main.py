@@ -47,7 +47,7 @@ print(f"Shape of the cleaned dataset (no outliers): {X_clean.shape}")
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X_clean.select_dtypes(include=[np.number]))  # Only scale numerical columns
 
-# Reduce the number of columns using PCA (keep the first 3 important ones)
+# Perform PCA and retain the first 3 principal components
 pca = PCA(n_components=3)
 X_pca = pca.fit_transform(X_scaled)
 
@@ -69,6 +69,6 @@ X_final = pd.concat([X_encoded, X_clean[label_encoded_columns]], axis=1)  # Add 
 X_final['pCR'] = y_pcr_clean  # Add the pCR outcome column
 X_final['RelapseFreeSurvival'] = y_rfs_clean  # Add the RFS outcome column
 
-# Show the first few rows 
+# Show the first few rows
 print("First few rows of the preprocessed data:")
 print(X_final.head())
