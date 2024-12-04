@@ -12,55 +12,31 @@ pip install scikit-learn numpy pandas scipy xlrd
 
 ## Preprocessing Steps
 
-### 1. **Loading the Dataset**
+1. **Load Dataset**
+   - Use `pandas.read_excel()` to load `TrainDataset2024.xls`.
+   - **Targets**:
+     - `pCR (outcome)` for classification.
+     - `RelapseFreeSurvival (outcome)` for regression.
+   - **Features**: All other columns except `ID` and target columns.
 
-The dataset is loaded using `pandas.read_excel()` from an Excel file (`TrainDataset2024.xls`). The dataset contains both features and target columns:
-- **Target Columns**:
-  - `pCR (outcome)`: Used for classification tasks.
-  - `RelapseFreeSurvival (outcome)`: Used for regression tasks.
-- **Features**: All other columns except the target columns and `ID` are used as input features for model training.
+2. **Handle Missing Data**
+   - **Categorical**: Fill with the mode using `SimpleImputer(strategy="most_frequent")`.
+   - **Numerical**: Fill with the mean using `SimpleImputer(strategy="mean")`.
 
-### 2. **Handling Missing Data**
+3. **Outlier Removal**
+   - Detect using Z-scores. Remove rows with numerical features having |Z| > 3.
 
-#### Categorical Columns:
-Missing values in categorical columns (e.g., strings or labels) are filled using the **most frequent value** (mode). This is done using the `SimpleImputer` from `scikit-learn` with the strategy `most_frequent`.
+4. **Feature Scaling**
+   - Standardize numerical features to have a mean of 0 and standard deviation of 1 using `StandardScaler`.
 
-#### Numerical Columns:
-Missing values in numerical columns (e.g., integers or floats) are filled using the **mean**. This is done using the `SimpleImputer` with the strategy `mean`.
+5. **Dimensionality Reduction**
+   - Apply PCA with `n_components=3` to retain principal components (`PC1`, `PC2`, `PC3`).
 
-### 3. **Outlier Detection and Removal**
+6. **Label Encoding**
+   - Encode categorical columns (`ER`, `HER2`, `Gene`) using `LabelEncoder`.
 
-Outliers in numerical columns are detected using the **Z-score** method. A Z-score indicates how far a value is from the mean in terms of standard deviations. Rows where all numerical features have a Z-score greater than 3 (in absolute value) are considered outliers and are removed from the dataset. This step helps ensure that extreme values do not negatively affect the model.
-
-### 4. **Feature Scaling**
-
-Numerical features often have varying scales, which can lead to poor model performance. Scaling ensures that all numerical features have a mean of 0 and a standard deviation of 1.
-
-- The `StandardScaler` from `scikit-learn` is used for this purpose.
-- The `fit_transform()` method is applied to scale only the numerical features of the cleaned data (`X_clean`).
-
-### 5. **Principal Component Analysis (PCA)**
-
-To reduce dimensionality and capture the most important features:
-- **PCA (Principal Component Analysis)** is applied using `PCA(n_components=3)` from `scikit-learn`.
-- The first three principal components (`PC1`, `PC2`, `PC3`) are retained for further use.
-
-### 6. **Label Encoding**
-
-Categorical variables are converted into numerical format using label encoding:
-- `LabelEncoder` from `scikit-learn` is used to assign a unique integer to each category in the columns `ER`, `HER2`, and `Gene`.
-- The original categorical columns are replaced with their numeric representations.
-
-### 7. **Combining Features and Targets**
-
-The final dataset includes:
-- The scaled PCA-transformed numerical features (`PC1`, `PC2`, `PC3`).
-- Encoded categorical features such as `ER`, `HER2`, and `Gene`.
-- The target variables:
-  - `pCR` for classification.
-  - `RelapseFreeSurvival` for regression.
-
-The processed data is saved in a DataFrame for use in model training.
+7. **Final Dataset**
+   - Include: PCA features (`PC1`, `PC2`, `PC3`), encoded categorical features (`ER`, `HER2`, `Gene`), and target variables.
 
 ## **Feature Selection**
 In this section, we will explore techniques to identify and select the most important features that contribute to the prediction of the target variables (**pCR** and **RelapseFreeSurvival**). Feature selection helps improve the efficiency and accuracy of the model by removing irrelevant or redundant features.
