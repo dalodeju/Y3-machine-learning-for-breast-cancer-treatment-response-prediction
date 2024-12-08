@@ -11,6 +11,9 @@ data = pd.read_excel('TrainDataset2024.xls')
 print("First few rows of the dataset:")
 print(data.head())
 
+# Replace 999 with NaN
+data.replace(999, np.nan, inplace=True)
+
 # Separate the features (X) and the outcomes (y_pcr and y_rfs)
 X = data.drop(columns=['pCR (outcome)', 'RelapseFreeSurvival (outcome)', 'ID'])  # Drop unwanted columns
 y_pcr = data['pCR (outcome)']  # Classification target
