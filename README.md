@@ -1,4 +1,4 @@
-# Machine Learning for Breast Cancer Treatment Response Prediction
+# Breast Cancer Treatment Response Prediction
 
 This project aims to predict the response to breast cancer treatment using machine learning techniques. The goal is to preprocess and prepare the dataset for model training by handling missing values, removing outliers, and scaling features. The ultimate aim is to build models that can classify treatment response and predict relapse-free survival (RFS) based on various medical and genetic features.
 
